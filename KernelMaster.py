@@ -10,14 +10,15 @@ import time
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-sys.path.append("C:/Users/NN133/Documents/libsvm-3.22/python")
-from svmutil import *
-#%matplotlib inline
-
+from libsvm.svmutil import *
+#sys.path.append("C:/Users/NN133/Documents/libsvm-3.22/python")
+#from svmutil import *
 from util_ker import *
 
 #Import data
-path = 'C:/Users/NN133/Documents/GitHub/GaussianKernelTest/data/breast-cancer-wisconsin.data.txt'
+
+path = '/Users/osita/Documents/data/wdbc/breast-cancer-wisconsin.data.txt'
+#path = 'C:/Users/NN133/Documents/GitHub/GaussianKernelTest/data/breast-cancer-wisconsin.data.txt'
 col_names = ['id','Clump_Thick','U_Cell_Size', 'U_Cell_Shape','Marg_Adh','Epith_Cell_Size','Bare_Nuclei',
             'Bland_Chrom','Norm_Nucle','Mitoses','Class']
 
@@ -32,6 +33,9 @@ data = df.drop(ind, axis ='index')
 
 #Convert the Bare_Nuclei datatype from Object to int64
 data['Bare_Nuclei'] = data.Bare_Nuclei.astype('int64')
+
+#Drop the id column
+data.drop("id", axis=1, inplace=True)
 
 #Check for null values
 data.isnull().sum()
@@ -67,15 +71,13 @@ ax2.legend(['neg','pos'],title ="Classes")
 data.Class.replace({2:-1,4:1}, inplace=True) 
 data.Class.value_counts()
 
-#Drop the id column
-data.drop("id", axis=1, inplace=True)
 
 #Extract Variables X and Label y from the data
 X = data.iloc[:,:-1].values.reshape(data.shape[0],data.shape[1]-1)
 y = data.iloc[:,-1].values.reshape(data.shape[0],1)
 
 #SplitData into train, validation and Test data sets
-xtr, xva, xte, ytr, yva, yte = splitdata(X, y, 25, 0.7)
+xtr, xva, xte, ytr, yva, yte = splitdata(X, y, 25, 0.8)
 
 #################
 #Sample data 
@@ -88,28 +90,33 @@ xtr, xva, xte, ytr, yva, yte = splitdata(X, y, 25, 0.7)
 
 #Choose Kernel
 #kernel = ['linear','H_poly','poly','rbf','erbf'] #['laplace','sqrexp','sigmoid']
-kernel = ['rbf']
+kernel = ['linear','poly','rbf']
 
 #Set Kernel parameter
 params = {}
-params['linear'] = []
+params['linear'] = [1]
 params['H_poly'] = [2,3,4]
-params['poly']   = [2,3,4]
-params['rbf']    = [ 0.001,0.01,0.1,1.0,100.0,1000 ]
+params['poly']   = [2,3,4,5]
+params['rbf']    = [ 0.001,1.0,100.0]
 params['erbf']   = [ 0.001,1.0,100.0]
 
-#Initialize Dictionaries
-TrainKernel = {}
-TestKernel  = {}
-TrainKernelTime = {}
-TestKernelTime = {}
-PSDCheck    = {}
-Perf_eva = {}
-AucRoc = {}
-Result = {}
+
+ANS = []
 
 #Construct Kernel
 for ker in kernel:
+#Initialize Dictionaries
+    TrainKernel = {}
+    TestKernel  = {}
+    TrainKernelTime = {}
+    TestKernelTime = {}
+    PSDCheck    = {}
+    Perf_eva = {}
+    AucRoc = {}
+    Result = {}
+    Result1 =()
+    
+
     for par in range(len(params[ker])):
         k_param = params[ker][par]
         start_time=time.time()
@@ -117,25 +124,33 @@ for ker in kernel:
         end_time=time.time()
         TrainKernelTime[ker] = end_time - start_time
         print('{} minutes to construct Training kernel'.format(TrainKernelTime[ker]/60))
+        print('')
+        
+        Result1 = tuple(TrainKernel)
         PSDCheck[ker]   = checkPSD(TrainKernel[ker])
-        plt.imshow(TrainKernel[ker]) #Any other kernel analysis can be inserted here
+        #plt.imshow(TrainKernel[ker]) #Any other kernel analysis can be inserted here
         TrainKernel[ker] = np.multiply(np.matmul(ytr,ytr.T),TrainKernel[ker])
         TrainKernel[ker] = addIndexToKernel(TrainKernel[ker])
+        print('=========>'+ ker + '-'+ str(par)+'=========>')
         
         start_time=time.time()
         TestKernel[ker] = kernelfun(xtr, xte, ker, k_param)
         end_time=time.time()
         TestKernelTime[ker] = end_time - start_time
+        print('\n')
         print('{} minutes to construct Test kernel'.format(TestKernel[ker]/60))
         TestKernel[ker] = addIndexToKernel(TestKernel[ker])
-   
+        print('=========>'+ ker + '-'+ str(par)+'=========>')
+        
         model = svm_train(list(ytr), [list(r) for r in TrainKernel[ker]], ('-b 1 -c 4 -t 4'))
         p_label, p_acc, p_val = svm_predict(list(yte),[list(row) for row in TestKernel[ker]], model, ('-b 1'))
         Perf_eva[ker] = EvaluateTest(np.asarray(yte/1.),np.asarray(p_label))
         AucRoc[ker] = computeRoc(yte, p_val)
-        Result[ker +'_'+ str(par)] = (TrainKernel,TrainKernelTime,PSDCheck,
-               TestKernel,TestKernelTime,model,p_label, p_acc, p_val,Perf_eva,AucRoc)
-        
+        AddTrainKer = Result1 + (TrainKernelTime,PSDCheck,
+               TestKernel,TestKernelTime,model,Perf_eva,AucRoc)
+        Result[ker +'_'+ str(par)] =  AddTrainKer
+        print('=========>'+ ker + '-'+ str(par)+'=========>')
+    ANS.append(Result)
         
 print('-' * 6)
 print(' Done ')
