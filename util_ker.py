@@ -559,11 +559,14 @@ def computeRoc(p_label, p_val):
     
     auc = np.sum(np.multiply((stack_x[1:L]-stack_x[0:L-1]),(stack_y[1:L])))
     
+    fig = plt.figure()
+    fig.add_subplot(111)
     plt.plot(stack_x,stack_y)
     plt.plot([0, 1], [0, 1], 'k--')
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.title("ROC curve of AUC = {} ".format(round(auc, 2)))
+    plt.show()
     
     print("--> An AUC value of {} achieved".format(round(auc,2)))
     
