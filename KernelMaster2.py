@@ -165,3 +165,149 @@ print('-' * 6)
 print(' Done ')
 print('=' * 6)
 
+'''
+ANS = []
+Out = []
+#Construct Kernel
+for ker in kernel:
+#Initialize Dictionaries
+    TrainKernel, TestKernel= {},{}
+    TrainKernelTime, TestKernelTime = {},{}
+    PSDCheck, Perf_eva, AucRoc = {},{},{}
+    Result = {}
+    Result1 =()
+    NanoResult = {}
+   
+    for par in range(len(params[ker])):
+        Nano_time1 = []
+        Nano_time2 = []
+        Nano_ker1 = []
+        Nano_ker2 = []
+        Nano_PSD  = []
+        Nano_Model = []
+        Nano_Perf = []
+        Nano_AUC = []
+        Nano_diag = []
+        ################################################
+        k_param = params[ker][par]#Calls the param dict by the ker key and slices therough params with iterable variable par
+        start_time=time.time() #Check points the start time
+        TrainKernel[ker] = kernelfun(xtr, xtr, ker, k_param) # Kernel added to a dict. Key refers to selected kernel
+        # What is the point since the key will not change till the completed iterations through params
+        
+        Nano_ker1.append(TrainKernel[ker]) #This would have been an alternative solution but this 
+        Nano_diag.append(diag_dominace(TrainKernel[ker]))
+        
+        end_time=time.time()
+        TrainKernelTime[ker] = end_time - start_time
+        Nano_time1.append(TrainKernelTime[ker]) 
+        
+        print('{} minutes to construct Training kernel'.format(TrainKernelTime[ker]/60))
+        print('')
+        
+        Result1 = tuple(TrainKernel)
+        PSDCheck[ker]   = checkPSD(TrainKernel[ker])
+        Nano_PSD.append(PSDCheck[ker]) 
+        
+        fig = plt.figure()
+        plt.imshow(TrainKernel[ker]) #Any other kernel analysis can be inserted here
+        plt.show()
+        TrainKernel[ker] = np.multiply(np.matmul(ytr,ytr.T),TrainKernel[ker])
+        TrainKernel[ker] = addIndexToKernel(TrainKernel[ker])
+        print('\n')
+        print('=========>'+ ker + '-'+ str(par)+'=========>')
+        
+        start_time=time.time()
+        TestKernel[ker] = kernelfun(xtr, xte, ker, k_param)
+        end_time=time.time()
+        TestKernelTime[ker] = end_time - start_time
+        Nano_time2.append(TestKernelTime[ker])
+        
+        print('\n')
+        print('{} minutes to construct Test kernel'.format(TestKernel[ker]/60))
+        TestKernel[ker] = addIndexToKernel(TestKernel[ker])
+        print('=========>'+ ker + '-'+ str(par)+'=========>')
+        print('\n')
+        model = svm_train(list(ytr), [list(r) for r in TrainKernel[ker]], ('-s 0 -b 1 -c 10 -t 4'))
+        p_label, p_acc, p_val = svm_predict(list(yte),[list(row) for row in TestKernel[ker]], model, ('-b 1'))
+        Nano_Model.append(model)
+        
+        Perf_eva[ker] = EvaluateTest(np.asarray(yte/1.),np.asarray(p_label))
+        Nano_Perf.append(Perf_eva[ker])
+        
+        AucRoc[ker] = computeRoc(p_label, p_val)
+        Nano_AUC.append(AucRoc[ker])
+        
+        AddTrainKer = Result1 + (TrainKernelTime,PSDCheck,
+               TestKernel,TestKernelTime,model,Perf_eva,AucRoc)
+        Result[ker +'_'+ str(par)] =  AddTrainKer
+        
+        print('=========>'+ ker + '-'+ str(par)+'=========>')
+        sklearnMetrics = compMetrics(p_val, yte, p_label)
+       
+        if sklearnMetrics["sk_auc"] == AucRoc[ker]:
+            print("AUC from sklearn the same as AUC computed here")
+        else:
+            print('Something is Wrong')
+        
+        NanoResult[ker +'_'+ str(par)] = (Nano_time1, 
+          Nano_time2,
+          Nano_ker1, 
+          Nano_ker2, 
+          Nano_PSD, 
+          Nano_Model, 
+          Nano_Perf,
+          Nano_AUC, 
+          Nano_diag
+          ) 
+    ANS.append(Result)
+    Out.append(NanoResult)  
+
+    
+print('-' * 6)
+print(' Done ')
+print('=' * 6)
+
+########################################
+#Extract Kernel performance
+     
+train_k_time = []
+test_k_time = []
+is_PSD = []
+col_names = []
+AUC = []
+Eva = []
+A=[]
+diagN=[]
+num = len(Out)
+for i in range(num):
+    for k in Out[i]:
+        col_names.append(k)
+        train_k_time.append(Out[i][k][0][0])
+        test_k_time.append(Out[i][k][1][0])
+        is_PSD.append(Out[i][k][4][0])
+        Eva.append(list(Out[i][k][6][0].values()))
+        A.append(Out[i][k][6][0])
+        AUC.append(Out[i][k][7][0]) 
+        diagN.append(Out[i][k][8][0]) 
+
+perfEva = pd.DataFrame(Eva)
+perfEva_T = perfEva.T
+perfEva_T.columns = col_names
+perfEva_T.index = [keys for keys in A[0].keys()]
+print('\n')
+print('DataFrame showing prediction performance of kernels')
+print('\n')
+print(perfEva_T)
+
+Tab_index = 'train_k_time','test_k_time' ,'is_PSD','AUC','diagN'
+Tab = [train_k_time,test_k_time ,is_PSD,AUC,diagN ]       
+Tab_df = pd.DataFrame(Tab)
+Tab_df.index = Tab_index
+Tab_df.columns = col_names
+print('\n')
+print('Other kernel performance indicators measured' )
+print('\n')
+print(Tab_df)
+
+perfEva_T.loc['Pos',:].plot(kind='bar')
+'''
