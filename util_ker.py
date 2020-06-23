@@ -12,14 +12,15 @@ import seaborn as sns
 import time
 import sys
 
-#from libsvm.svmutil import * #for desktop
+from libsvm.svmutil import * #for desktop
 
 sns.set()
-sys.path.append("C:/Users/NN133/Documents/libsvm-3.22/python") #for laptop
-from svmutil import *
+#sys.path.append("C:/Users/NN133/Documents/libsvm-3.22/python") #for laptop
+#from svmutil import *
 
 ##############################################################################
 #plt.style.use('fivethirtyeight')
+plt.style.use('ggplot')
 import warnings
 warnings.filterwarnings('ignore')
 ###############################################################################

@@ -10,18 +10,18 @@ import time
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-#from libsvm.svmutil import * #for desktop
+from libsvm.svmutil import * #for desktop
 
 import seaborn as sns
 sns.set()
-sys.path.append("C:/Users/NN133/Documents/libsvm-3.22/python") #for laptop
-from svmutil import *
+#sys.path.append("C:/Users/NN133/Documents/libsvm-3.22/python") #for laptop
+#from svmutil import *
 from util_ker import *
 from util_sk import *
 #Import data
 
-#path = '/Users/osita/Documents/data/wdbc/breast-cancer-wisconsin.data.txt'
-path = 'C:/Users/NN133/Documents/GitHub/GaussianKernelTest/data/breast-cancer-wisconsin.data.txt'
+path = '/Users/osita/Documents/data/wdbc/breast-cancer-wisconsin.data.txt'
+#path = 'C:/Users/NN133/Documents/GitHub/GaussianKernelTest/data/breast-cancer-wisconsin.data.txt'
 col_names = ['id','Clump_Thick','U_Cell_Size', 'U_Cell_Shape','Marg_Adh','Epith_Cell_Size','Bare_Nuclei',
             'Bland_Chrom','Norm_Nucle','Mitoses','Class']
 
@@ -92,7 +92,10 @@ ax2.legend(['neg','pos'],title ="Classes")
 
 #Replace class labels from [benign, malignant]=(2,4) to (-1,1)
 data.Class.replace({2:-1,4:1}, inplace=True) 
+
+fig = plt.figure()
 data.Class.value_counts()
+plt.show()
 ##############################################################################
 fig = plt.figure()
 sns.heatmap(data.iloc[:,:-1].corr(),annot=True,cmap='RdYlGn',linewidths=0.2) #data.corr()-->correlation matrix
@@ -120,7 +123,7 @@ xtr, xva, xte, ytr, yva, yte = splitdata(X, y, 12, 0.8)
 
 #Choose Kernel
 #kernel = ['linear','H_poly','poly','rbf','erbf'] #['laplace','sqrexp','sigmoid']
-kernel = ['linear','poly','H_poly']
+kernel = ['linear','poly','H_poly','rbf']
 #kernel = ['laplace']
         
 #Set Kernel parameter
@@ -130,7 +133,7 @@ params['H_poly']  = [2,3,4]
 params['poly']    = [2,3,4]
 params['rbf']     = [0.001,0.01,0.1,1,10,100,1000]
 params['erbf']    = [0.001,1.0,100.0]
-params['laplace'] = [0.00001,0.0001,0.001,0.01,0.3,3,30,300,3000]
+params['laplace'] = [0.00001,0.0001,0.001,0.01]
 
 
 Exp = fitkernelmodel(xtr, xte, ytr, yte, kernel, params)
